@@ -1,8 +1,9 @@
+// import express from "express";
 const express = require("express");
-
+// loads express because the router will use it
 
 const router = express.Router();
-// express.Router() creates a mini Express app
+// loads express.Router()
 // It handles routes only
 // It does NOT start a server
 
