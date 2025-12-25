@@ -1,47 +1,30 @@
+// Loads .env values into process.env
 require("dotenv").config();
-// Loads .env into process.env
 
-// import express from "express";
+// load the express library and create server instance
 const express = require("express");
-// load the Express library
-// express becomes a funtion I can use
-// const means the value won't change
-
-// import taskRouter from "./routes/tasks";
-const taskRouter = require("./routes/tasks");
-// This gives index.js access to the taskRouter
-
 const app = express();
-// calls the express() function
-// creates an application object
-// app represents your server
 
+// Global middleware that converts JSON to JS object
+app.use(express.json());
+
+// Custom middleware (logging, auth, etc.)
 app.use((req, res, next) => {
     console.log("A request was made");
     next();
 });
-// Middleware: runs before and can affect routes & controls request flow, authentication and validation
 
+// Feature-level routes
+const taskRouter = require("./routes/tasks");
+app.use("/tasks", taskRouter);
+
+// App-level routes which confirms that the API alive
 app.get('/', (req, res) => {
     res.send('Task Manager API is running!');
 });
-// app.get = listens for GET request
-// '/' = the homepage URL
-// (req, res) = Request and response objects
-// res.send(...) = sends text back to the browser
 
+// Server start
 const PORT = process.env.PORT;
-// storing the port number
-// makes it easier to change later
-
-
-app.use("/tasks", taskRouter);
-// This registers middleware
-
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
-// app.listen = starts the server
-// PORT = where it listens 
-// The function runs once when the server starts
-// console.log prints confirmation
