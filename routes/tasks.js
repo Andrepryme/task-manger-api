@@ -5,7 +5,8 @@ const router = express.Router();
 // create a task variable for an array that temporarily holds all tasks
 const tasks = [
     { id: 1, title: "Learn JS", completed: false },
-    { id: 2, title: "Build API", completed: false }
+    { id: 2, title: "Build API", completed: false },
+    { id: 3, title: "Deployment", completed: false }
 ];  
 
 // Handle GET requests for /tasks and sends data as JSON
@@ -14,11 +15,10 @@ router.get("/", (req, res) => {
     res.json(tasks);
 });
 
-
 // Handle GET requests for /tasks/:id and sends data as JSON
 router.get("/:id", (req, res) => {
     // Extract the task ID from the URL parameters
-    const taskId = parseInt(req.params.id);
+    const taskId = Number(req.params.id);
     // Find the task with the matching ID
     const task = tasks.find(t => t.id === taskId);
     // If task not found, stop execution send 404 response
@@ -29,6 +29,27 @@ router.get("/:id", (req, res) => {
     res.json(task);
 });
 
+router.patch("/:id", (req, res) => {
+    // Extract the task ID from the URL parameters
+    const taskId = Number(req.params.id);
+    // Find the task with the matching ID
+    const task = tasks.find(t => t.id === taskId);
+
+    if(!task) {
+        return res.status(404).json({ error: "Task not found" });
+    }
+
+    // Update title if provided in the request body
+    if (req.body.title !== undefined) {
+    task.title = req.body.title;
+    }
+    // Update completed status if provided in the request body
+    if (req.body.completed !== undefined) {
+    task.completed = req.body.completed;
+    }
+    // Send the updated task as JSON
+    res.json(task);
+});
 
 // Handles POST requests, and used to create data
 router.post("/", (req, res) => {
