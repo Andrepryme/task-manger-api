@@ -9,6 +9,22 @@ const tasks = [
     { id: 3, title: "Deployment", completed: false }
 ];  
 
+// Handles POST requests, and used to create data
+router.post("/", (req, res) => {
+    const newTask = {
+        id: Date.now(),
+        // Create a simple unique ID
+        title: req.body.title,
+        // Contains data sent by the client
+        completed: false
+    };
+    tasks.push(newTask);
+    // Saves the task
+    res.status(201).json(newTask);
+    // Confirms it was created successfully
+    console.log(req.body);
+});
+
 // Handle GET requests for /tasks and sends data as JSON
 router.get("/", (req, res) => {
     // res.send("All Task");
@@ -29,16 +45,16 @@ router.get("/:id", (req, res) => {
     res.json(task);
 });
 
+// Handle PATCH requests for /tasks/:id to update a task
 router.patch("/:id", (req, res) => {
     // Extract the task ID from the URL parameters
     const taskId = Number(req.params.id);
     // Find the task with the matching ID
     const task = tasks.find(t => t.id === taskId);
-
+    // If task not found, stop execution send 404 response
     if(!task) {
         return res.status(404).json({ error: "Task not found" });
     }
-
     // Update title if provided in the request body
     if (req.body.title !== undefined) {
     task.title = req.body.title;
@@ -51,20 +67,19 @@ router.patch("/:id", (req, res) => {
     res.json(task);
 });
 
-// Handles POST requests, and used to create data
-router.post("/", (req, res) => {
-    const newTask = {
-        id: Date.now(),
-        // Create a simple unique ID
-        title: req.body.title,
-        // Contains data sent by the client
-        completed: false
-    };
-    tasks.push(newTask);
-    // Saves the task
-    res.status(201).json(newTask);
-    // Confirms it was created successfully
-    console.log(req.body);
+router.delete("/:id", (req, res) => {
+    // Extract the task ID from the URL parameters
+    const taskId = Number(req.params.id);
+    // Find the index of the task with the matching ID
+    const taskIndex = tasks.findIndex(t => t.id === taskId);
+    // If task not found, stop execution send 404 response
+    if(taskIndex === -1) {
+        return res.status(404).json({ error: "Task not found" });
+    }
+    // Remove the task from the array
+    tasks.splice(taskIndex, 1);
+    // Send a 204 No Content response to indicate successful deletion
+    res.status(204).send();
 });
 
 // Server makes this router available to other files
