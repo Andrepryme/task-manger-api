@@ -1,85 +1,138 @@
 // load the express library and loads the method that handles the routes
 const express = require("express");
 const router = express.Router();
+// import database functions
+const {
+    getAllTasks,
+    createTask,
+    getTaskById,
+    updateTask,
+    deleteTask
+} = require("../db/database");
 
-// create a task variable for an array that temporarily holds all tasks
-const tasks = [
-    { id: 1, title: "Learn JS", completed: false },
-    { id: 2, title: "Build API", completed: false },
-    { id: 3, title: "Deployment", completed: false }
-];  
+// In-memory array to store tasks for PATCH and DELETE operations
+// const tasks = [
+//     { id: 1, title: "Learn JS", completed: false },
+//     { id: 2, title: "Build API", completed: false },
+//     { id: 3, title: "Deployment", completed: false }
+// ];  
 
 // Handles POST requests, and used to create data
-router.post("/", (req, res) => {
-    const newTask = {
-        id: Date.now(),
-        // Create a simple unique ID
-        title: req.body.title,
-        // Contains data sent by the client
-        completed: false
-    };
-    tasks.push(newTask);
-    // Saves the task
-    res.status(201).json(newTask);
-    // Confirms it was created successfully
-    console.log(req.body);
+router.post("/", async(req, res) => {
+    // Extract title from the request body
+    // const title = req.body.title;
+    const { title } = req.body;
+    // Validate the title
+    if (!title) {
+        return res.status(400).json({ error: "Title is required" });
+    }
+    // Insert the new task into the database
+    try {
+        const newTask = await createTask(title);
+        // Send the created task as JSON
+        res.status(201).json(newTask);
+    } catch (error) {
+        // Console error for debugging
+        console.error("CREATE ERROR:", error);
+        // Return a 500 error response
+        res.status(500).json({ error: "Failed to create task" });
+    }
 });
 
 // Handle GET requests for /tasks and sends data as JSON
-router.get("/", (req, res) => {
-    // res.send("All Task");
-    res.json(tasks);
+router.get("/", async(req, res) => {
+ // Retrieve the task from the database
+    try {
+        const allTasks = await getAllTasks();
+        if (!allTasks) {
+            return res.status(404).json({ error: "No tasks found" });
+        }
+        // Send the task as JSON
+        res.json(allTasks);
+    } catch (err) {
+        // Console error for debugging
+        console.error("GET ALL ERROR:", err);
+        // Return a 500 error response  
+        res.status(500).json({ error: "Failed to retrieve tasks" });  
+    }
 });
 
 // Handle GET requests for /tasks/:id and sends data as JSON
-router.get("/:id", (req, res) => {
+router.get("/:id", async(req, res) => {
     // Extract the task ID from the URL parameters
     const taskId = Number(req.params.id);
-    // Find the task with the matching ID
-    const task = tasks.find(t => t.id === taskId);
-    // If task not found, stop execution send 404 response
-    if(!task) {
-        return res.status(404).json({ error: "Task not found" });
+    // Validate the task ID
+    if (Number.isNaN(taskId)) {
+        return res.status(400).json({ error: "Invalid task ID" });
     }
-    // Send the found task as JSON
-    res.json(task);
+    // Retrieve the task from the database
+    try {
+        const thisTask = await getTaskById(taskId);
+        // If task not found, send 404 response
+        if (!thisTask) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+        // Send the task as JSON
+        res.json(thisTask);
+    } catch (err) {
+        // Console error for debugging
+        console.error("GET BY ID ERROR:", err);
+        // Return a 500 error response
+        res.status(500).json({ error: "Failed to retrieve task" });  
+    }
 });
 
 // Handle PATCH requests for /tasks/:id to update a task
-router.patch("/:id", (req, res) => {
+router.patch("/:id", async(req, res) => {
     // Extract the task ID from the URL parameters
     const taskId = Number(req.params.id);
-    // Find the task with the matching ID
-    const task = tasks.find(t => t.id === taskId);
-    // If task not found, stop execution send 404 response
-    if(!task) {
-        return res.status(404).json({ error: "Task not found" });
+    const { title, completed } = req.body;
+    // Validate the task ID
+    if (Number.isNaN(taskId)) {
+        return res.status(400).json({ error: "Invalid task ID" });
     }
-    // Update title if provided in the request body
-    if (req.body.title !== undefined) {
-    task.title = req.body.title;
+    // Update the task in the database
+    try {
+        const updatedTask = await updateTask(taskId, {
+            title,
+            completed
+        });
+        if (updatedTask === 0) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+        // Send the updated task as JSON
+        res.status(200).json({ message: "Task updated successfully" });
+    } catch (err) {
+        // Console error for debugging
+        console.error("UPDATE ERROR:", err);
+        // Return a 500 error response
+        return res.status(500).json({ error: "Failed to update task" });
     }
-    // Update completed status if provided in the request body
-    if (req.body.completed !== undefined) {
-    task.completed = req.body.completed;
-    }
-    // Send the updated task as JSON
-    res.json(task);
 });
 
-router.delete("/:id", (req, res) => {
+// Handle DELETE requests for /tasks/:id to delete a task
+router.delete("/:id", async (req, res) => {
     // Extract the task ID from the URL parameters
     const taskId = Number(req.params.id);
-    // Find the index of the task with the matching ID
-    const taskIndex = tasks.findIndex(t => t.id === taskId);
-    // If task not found, stop execution send 404 response
-    if(taskIndex === -1) {
-        return res.status(404).json({ error: "Task not found" });
+    // Validate the task ID
+    if (Number.isNaN(taskId)) {
+        return res.status(400).json({ error: "Invalid task ID" });
     }
-    // Remove the task from the array
-    tasks.splice(taskIndex, 1);
-    // Send a 204 No Content response to indicate successful deletion
-    res.status(204).send();
+    // Delete the task from the database
+    try {
+        const deleteThis = await deleteTask(taskId);
+        // If no rows were affected, the task was not found
+        if (deleteThis.changes === 0) {
+            return res.status(404).json({ error: "Task not found" });
+        }   
+        // Send a 204 No Content response        
+        res.status(204).send();
+    } catch (err) {
+        // Console error for debugging
+        console.error("DELETE ERROR:", err);
+        // Return a 500 error response
+        res.status(500).json({ error: "Failed to delete task" });
+    }
 });
 
 // Server makes this router available to other files
