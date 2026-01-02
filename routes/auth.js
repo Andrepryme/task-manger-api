@@ -45,6 +45,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// Route to handle user login
 router.post('/login', async (req, res) => {
   // Validate request body
   if (!req.body) {
@@ -58,19 +59,24 @@ router.post('/login', async (req, res) => {
   }
   try {
     // Retrieve user by email
-    const user = await getUserByEmail(email);
-    if (!user) {
+    const thisUser = await getUserByEmail(email);
+    if (!thisUser) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
     // Compare provided password with stored password hash
-    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    const passwordMatch = await bcrypt.compare(password, thisUser.password_hash);
     if (!passwordMatch) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
-    // If login is successful, send a success response
-    res.json({ message: "Login successful" });
+    // Successful login response
+    res.json({ 
+      message: "Login successful",
+      user: { id: thisUser.id, email: thisUser.email } 
+    });
   } catch (err) {
+    // Log the error for debugging purposes
     console.error("Error logging in user:", err);
+    // Error response
     res.status(500).json({ error: "Failed to login user" });
   }
 });

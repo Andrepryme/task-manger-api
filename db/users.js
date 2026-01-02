@@ -35,6 +35,7 @@ function createUser(email, password) {
     });
 }
 
+// Function to get a user by email
 function getUserByEmail(email) {
     return new Promise((resolve, reject) => {
         const sql = `
