@@ -3,10 +3,11 @@ const express = require('express');
 // Create a new router instance
 const router = express.Router();
 // Import bcrypt for password hashing
-// const bcrypt = require('bcrypt');
+const bcrypt = require('bcrypt');
 // Import database function to create a user
 const {
-  createUser
+  createUser,
+  getUserByEmail
 } = require('../db/users');
 
 // Test route to verify the auth router is working
@@ -41,6 +42,36 @@ router.post('/register', async (req, res) => {
     console.error("Error registering user:", err);
     // Error response
     res.status(500).json({ error: "Failed to register user" });
+  }
+});
+
+router.post('/login', async (req, res) => {
+  // Validate request body
+  if (!req.body) {
+    return res.status(400).json({ error: "Request body is missing" });
+  }
+  // Extract email and password from the request body
+  const { email, password } = req.body;
+  // Basic validation for email and password
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required" });
+  }
+  try {
+    // Retrieve user by email
+    const user = await getUserByEmail(email);
+    if (!user) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+    // Compare provided password with stored password hash
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    if (!passwordMatch) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+    // If login is successful, send a success response
+    res.json({ message: "Login successful" });
+  } catch (err) {
+    console.error("Error logging in user:", err);
+    res.status(500).json({ error: "Failed to login user" });
   }
 });
 
