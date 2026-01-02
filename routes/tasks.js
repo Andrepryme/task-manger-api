@@ -1,14 +1,15 @@
 // load the express library and loads the method that handles the routes
 const express = require("express");
 const router = express.Router();
-// import database functions
+
+// Import database functions for Tasks
 const {
     getAllTasks,
     createTask,
     getTaskById,
     updateTask,
     deleteTask
-} = require("../db/database");
+} = require("../db/tasks");
 
 // In-memory array to store tasks for PATCH and DELETE operations
 // const tasks = [
@@ -19,9 +20,12 @@ const {
 
 // Handles POST requests, and used to create data
 router.post("/", async(req, res) => {
+    // Validate that the request body is present
+    if (!req.body) {
+        return res.status(400).json({ error: "Request body is required" });
+    }
     // Extract title from the request body
-    // const title = req.body.title;
-    const { title } = req.body;
+    const title = req.body.title;
     // Validate the title
     if (!title) {
         return res.status(400).json({ error: "Title is required" });
@@ -86,11 +90,20 @@ router.get("/:id", async(req, res) => {
 router.patch("/:id", async(req, res) => {
     // Extract the task ID from the URL parameters
     const taskId = Number(req.params.id);
-    const { title, completed } = req.body;
     // Validate the task ID
     if (Number.isNaN(taskId)) {
         return res.status(400).json({ error: "Invalid task ID" });
     }
+    // Validate that at least one field is provided for update
+    if (req.body) {
+        if (req.body.title && req.body.completed === undefined) {  
+            return res.status(400).json({ error: "Title or completed must be provided" });
+        }
+    } else {
+        return res.status(400).json({ error: "Request body is required" });
+    }
+    // Extract fields to update from the request body
+    const { title, completed } = req.body;
     // Update the task in the database
     try {
         const updatedTask = await updateTask(taskId, {
@@ -106,7 +119,7 @@ router.patch("/:id", async(req, res) => {
         // Console error for debugging
         console.error("UPDATE ERROR:", err);
         // Return a 500 error response
-        return res.status(500).json({ error: "Failed to update task" });
+        res.status(500).json({ error: "Failed to update task" });
     }
 });
 

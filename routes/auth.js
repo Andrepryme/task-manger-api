@@ -1,0 +1,47 @@
+// Import express to create a router
+const express = require('express');
+// Create a new router instance
+const router = express.Router();
+// Import bcrypt for password hashing
+// const bcrypt = require('bcrypt');
+// Import database function to create a user
+const {
+  createUser
+} = require('../db/users');
+
+// Test route to verify the auth router is working
+router.get("/", async(req, res) => {
+  res.send("Auth route is working");
+});
+
+// Route to handle user registration
+router.post('/register', async (req, res) => {
+  // Validate request body
+  if (!req.body) {
+    return res.status(400).json({ error: "Request body is missing" });
+  }
+  // Extract email and password from the request body
+  const { email, password } = req.body;
+  // Basic validation for email and password
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required" });
+  }
+  // Attempt to create a new user
+  try {
+    // Call the createUser function from the database module
+    const newUser = await createUser(email, password);
+    // Successful response
+    res.status(201).json({ message: "User registered successfully", user: newUser });
+  } catch (err) {
+    // Handle unique constraint violation for email
+    if (err.code === 'SQLITE_CONSTRAINT') {
+      return res.status(409).json({ error: "Email already exists" });
+    }
+    // Log the error for debugging purposes
+    console.error("Error registering user:", err);
+    // Error response
+    res.status(500).json({ error: "Failed to register user" });
+  }
+});
+
+module.exports = router;

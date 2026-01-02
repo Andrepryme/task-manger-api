@@ -14,9 +14,12 @@ app.use((req, res, next) => {
     next();
 });
 
-// Feature-level routes
+// Task routes
 const taskRouter = require("./routes/tasks");
 app.use("/tasks", taskRouter);
+// Auth routes
+const authRouter = require("./routes/auth");
+app.use("/auth", authRouter);
 
 // App-level routes which confirms that the API alive
 app.get('/', (req, res) => {
