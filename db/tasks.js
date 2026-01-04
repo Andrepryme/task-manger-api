@@ -1,19 +1,19 @@
 const { db } = require('./database');
 
 // Function to create a new task
-function createTask(title) {
+function createTask(title, user_id) {
     return new Promise((resolve, reject) => {
-        const sql =  "INSERT INTO tasks (title) VALUES (?)";
+        const sql =  "INSERT INTO tasks (title, user_id) VALUES (?, ?)";
         db.run(
             sql,
-            [title],
+            [title, user_id],
             function (err) {
                 if (err) {
                     reject(err);
                 } else {
                     resolve({
                         id: this.lastID,
-                        title
+                        title: title
                     });
                 }
             }
@@ -22,12 +22,12 @@ function createTask(title) {
 }
 
 // Function to get a task by ID
-function getTaskById(id) {
+function getTaskById(id, user_id) {
     return new Promise((resolve, reject) => {
-        const sql = "SELECT * FROM tasks WHERE id = ?";
+        const sql = "SELECT * FROM tasks WHERE id = ? AND user_id = ?";
         db.get(
             sql,
-            [id],
+            [id, user_id],
             (err, row) => {
                 if (err) {
                     reject(err);
@@ -40,11 +40,12 @@ function getTaskById(id) {
 }
 
 // Function to get all tasks
-function getAllTasks() {
+function getAllTasks(user_id) {
     return new Promise((resolve, reject) => {
-        const sql =  "SELECT * FROM tasks";
+        const sql =  "SELECT * FROM tasks WHERE user_id = ?";
         db.all(
             sql,
+            [user_id],
             (err, rows) => {
                 // Handle any errors
                 if (err) {
@@ -57,7 +58,7 @@ function getAllTasks() {
     });
 }
 
-function updateTask(id, fields) {
+function updateTask(id, fields, user_id) {
     // Build the SQL query dynamically based on provided fields
     const updates = [];
     // Parameters array for the SQL query
@@ -82,10 +83,12 @@ function updateTask(id, fields) {
         const sql = `
         UPDATE tasks 
         SET ${updates.join(", ")} 
-        WHERE id = ?
+        WHERE id = ? AND user_id = ?
         `;
         // Add the task ID to the parameters array
         values.push(id);
+        // Add the user ID to the parameters array
+        values.push(user_id);
         // Execute the update query
         db.run(
             sql,
@@ -102,12 +105,12 @@ function updateTask(id, fields) {
 }   
 
 // Function to delete a task by ID
-function deleteTask(id) {
+function deleteTask(id, user_id) {
     return new Promise((resolve, reject) => {
-        const sql = "DELETE FROM tasks WHERE id = ?";   
+        const sql = "DELETE FROM tasks WHERE id = ? AND user_id = ?";   
         db.run(
             sql,
-            [id],
+            [id, user_id],
             function (err) {
                 if (err) {
                     reject(err);

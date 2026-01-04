@@ -39,7 +39,7 @@ router.post("/", async(req, res) => {
     }
     // Insert the new task into the database
     try {
-        const newTask = await createTask(title);
+        const newTask = await createTask(title, req.user.userId);
         // Send the created task as JSON
         res.status(201).json(newTask);
     } catch (error) {
@@ -54,7 +54,7 @@ router.post("/", async(req, res) => {
 router.get("/", async(req, res) => {
  // Retrieve the task from the database
     try {
-        const allTasks = await getAllTasks();
+        const allTasks = await getAllTasks(req.user.userId);
         if (!allTasks) {
             return res.status(404).json({ error: "No tasks found" });
         }
@@ -78,7 +78,7 @@ router.get("/:id", async(req, res) => {
     }
     // Retrieve the task from the database
     try {
-        const thisTask = await getTaskById(taskId);
+        const thisTask = await getTaskById(taskId, req.user.userId);
         // If task not found, send 404 response
         if (!thisTask) {
             return res.status(404).json({ error: "Task not found" });
@@ -101,22 +101,25 @@ router.patch("/:id", async(req, res) => {
     if (Number.isNaN(taskId)) {
         return res.status(400).json({ error: "Invalid task ID" });
     }
-    // Validate that at least one field is provided for update
-    if (req.body) {
-        if (req.body.title && req.body.completed === undefined) {  
-            return res.status(400).json({ error: "Title or completed must be provided" });
-        }
-    } else {
+    // Validate that the request body is present
+    if (!req.body) {
         return res.status(400).json({ error: "Request body is required" });
+    }
+    // return res.status(201).json(req.body.title);
+    // Validate that at least one field to update is provided
+    if (req.body.title  === undefined && req.body.completed === undefined) {  
+        return res.status(400).json({ error: "Title or completed must be provided" });
     }
     // Extract fields to update from the request body
     const { title, completed } = req.body;
     // Update the task in the database
     try {
-        const updatedTask = await updateTask(taskId, {
-            title,
-            completed
-        });
+        const updatedTask = await updateTask(
+            taskId,
+            { title, completed },
+            req.user.userId
+        );
+        // If no rows were affected, the task was not found
         if (updatedTask === 0) {
             return res.status(404).json({ error: "Task not found" });
         }
@@ -140,7 +143,7 @@ router.delete("/:id", async (req, res) => {
     }
     // Delete the task from the database
     try {
-        const deleteThis = await deleteTask(taskId);
+        const deleteThis = await deleteTask(taskId, req.user.userId);
         // If no rows were affected, the task was not found
         if (deleteThis.changes === 0) {
             return res.status(404).json({ error: "Task not found" });

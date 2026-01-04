@@ -3,7 +3,7 @@ const sqlite3 = require('sqlite3').verbose();
 // Define the path to the SQLite database file
 const path = require('path');
 // Adjust the path as necessary
-const dbPath = path.resolve(__dirname, 'tasks.db');
+const dbPath = path.resolve(__dirname, 'dbvault.db');
 
 // Create and export the database connection instance
 const db = new sqlite3.Database(dbPath, (err) => {
