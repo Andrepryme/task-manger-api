@@ -11,6 +11,13 @@ const {
     deleteTask
 } = require("../db/tasks");
 
+const {
+    authMiddleware
+ } = require("../middleware/auth");
+
+// Apply authentication middleware to all routes in this router
+router.use(authMiddleware);
+
 // In-memory array to store tasks for PATCH and DELETE operations
 // const tasks = [
 //     { id: 1, title: "Learn JS", completed: false },

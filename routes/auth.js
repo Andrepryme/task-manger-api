@@ -1,9 +1,16 @@
+// Loads .env values into process.env
+require("dotenv").config();
 // Import express to create a router
 const express = require('express');
 // Create a new router instance
 const router = express.Router();
 // Import bcrypt for password hashing
 const bcrypt = require('bcrypt');
+// Import jsonwebtoken for token generation
+const jwt = require('jsonwebtoken');
+// Secret key for JWT signing (in a real application, store this securely)
+const JWTsecret = process.env.JWT_SECRET;
+
 // Import database function to create a user
 const {
   createUser,
@@ -68,10 +75,17 @@ router.post('/login', async (req, res) => {
     if (!passwordMatch) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: thisUser.id },
+      JWTsecret,
+      { expiresIn: '1h' }
+    );
     // Successful login response
     res.json({ 
       message: "Login successful",
-      user: { id: thisUser.id, email: thisUser.email } 
+      user: { id: thisUser.id, email: thisUser.email },
+      token
     });
   } catch (err) {
     // Log the error for debugging purposes
