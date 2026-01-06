@@ -27,10 +27,6 @@ router.use(authMiddleware);
 
 // Handles POST requests, and used to create data
 router.post("/", async(req, res) => {
-    // Validate that the request body is present
-    if (!req.body) {
-        return res.status(400).json({ error: "Request body is required" });
-    }
     // Extract title from the request body
     const title = req.body.title;
     // Validate the title
@@ -42,9 +38,9 @@ router.post("/", async(req, res) => {
         const newTask = await createTask(title, req.user.userId);
         // Send the created task as JSON
         res.status(201).json(newTask);
-    } catch (error) {
+    } catch (err) {
         // Console error for debugging
-        console.error("CREATE ERROR:", error);
+        console.error("CREATE ERROR:", err);
         // Return a 500 error response
         res.status(500).json({ error: "Failed to create task" });
     }
@@ -64,7 +60,7 @@ router.get("/", async(req, res) => {
         // Console error for debugging
         console.error("GET ALL ERROR:", err);
         // Return a 500 error response  
-        res.status(500).json({ error: "Failed to retrieve tasks" });  
+        res.status(500).json({ error: "Failed to retrieve tasks" });
     }
 });
 
@@ -84,7 +80,7 @@ router.get("/:id", async(req, res) => {
             return res.status(404).json({ error: "Task not found" });
         }
         // Send the task as JSON
-        res.json(thisTask);
+        res.status(200).json(thisTask);
     } catch (err) {
         // Console error for debugging
         console.error("GET BY ID ERROR:", err);
@@ -101,17 +97,15 @@ router.patch("/:id", async(req, res) => {
     if (Number.isNaN(taskId)) {
         return res.status(400).json({ error: "Invalid task ID" });
     }
-    // Validate that the request body is present
-    if (!req.body) {
-        return res.status(400).json({ error: "Request body is required" });
-    }
-    // return res.status(201).json(req.body.title);
-    // Validate that at least one field to update is provided
-    if (req.body.title  === undefined && req.body.completed === undefined) {  
-        return res.status(400).json({ error: "Title or completed must be provided" });
-    }
     // Extract fields to update from the request body
     const { title, completed } = req.body;
+
+    // Validate that at least one field to update is provided
+    if (title  === undefined && completed === undefined) {
+        return res.status(400).json({
+            error: "Title or completed must be provided"
+        });
+    }
     // Update the task in the database
     try {
         const updatedTask = await updateTask(
@@ -126,9 +120,6 @@ router.patch("/:id", async(req, res) => {
         // Send the updated task as JSON
         res.status(200).json({ message: "Task updated successfully" });
     } catch (err) {
-        // Console error for debugging
-        console.error("UPDATE ERROR:", err);
-        // Return a 500 error response
         res.status(500).json({ error: "Failed to update task" });
     }
 });
@@ -143,11 +134,11 @@ router.delete("/:id", async (req, res) => {
     }
     // Delete the task from the database
     try {
-        const deleteThis = await deleteTask(taskId, req.user.userId);
+        const deletedTask = await deleteTask(taskId, req.user.userId);
         // If no rows were affected, the task was not found
-        if (deleteThis.changes === 0) {
+        if (deletedTask === 0) {
             return res.status(404).json({ error: "Task not found" });
-        }   
+        }
         // Send a 204 No Content response        
         res.status(204).send();
     } catch (err) {

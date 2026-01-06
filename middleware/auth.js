@@ -6,17 +6,20 @@ const JWT_secret = process.env.JWT_SECRET;
 function authMiddleware (req, res, next) {
     //  Check if JWT secret is defined
     if (!JWT_secret) {
-        console.error("JWT_SECRET is not defined in environment variables.");
+        // JWT secret is missing
+        console.log("JWT_SECRET is not defined in environment variables.");
         return res.status(500).json({ error: "Authentication failed." });
     }
     // Check if the request has headers
     if (!req.headers) {
-        console.error("Request headers are missing.");
+        // Request headers are missing
+        console.log("Request headers are missing.");
         return res.status(401).json({ error: "Authentication failed." });
     }
     // Check if the Authorization header is present
     if (!req.headers.authorization) {
-        console.error("Authorization header is missing.");
+        // Authorization header is missing
+        console.log("Authorization header is missing.");
         return res.status(401).json({ error: "Authentication failed." });
     }
     // Get the Authorization header from the request
@@ -25,7 +28,8 @@ function authMiddleware (req, res, next) {
     const parts = authHeader.split(' ');
     // Validate the format of the Authorization header
     if (parts.length !== 2 || parts[0] !== 'Bearer') {
-        console.error("Invalid Authorization header format.");
+        // Invalid Authorization header format
+        console.log("Invalid Authorization header format.");
         return res.status(401).json({ error: "Authentication failed." });
     }
     // Extract the token from the header
@@ -36,6 +40,8 @@ function authMiddleware (req, res, next) {
         const decoded = jwt.verify(token, JWT_secret);
         // Check if the token is valid
         if (!decoded) {
+            // Token is invalid
+            console.log("Token verification failed.");
             return res.status(401).json({ error: "Authentication failed." });
         }
         // Attach the decoded user information to the request object

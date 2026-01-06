@@ -1,13 +1,13 @@
 // Loads .env values into process.env
 require("dotenv").config();
 // Import express to create a router
-const express = require('express');
+const express = require("express");
 // Create a new router instance
 const router = express.Router();
 // Import bcrypt for password hashing
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 // Import jsonwebtoken for token generation
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 // Secret key for JWT signing (in a real application, store this securely)
 const JWTsecret = process.env.JWT_SECRET;
 
@@ -15,7 +15,7 @@ const JWTsecret = process.env.JWT_SECRET;
 const {
   createUser,
   getUserByEmail
-} = require('../db/users');
+} = require("../db/users");
 
 // Test route to verify the auth router is working
 router.get("/", async(req, res) => {
@@ -23,15 +23,21 @@ router.get("/", async(req, res) => {
 });
 
 // Route to handle user registration
-router.post('/register', async (req, res) => {
+router.post("/register", async (req, res) => {
   // Validate request body
   if (!req.body) {
+    // Console log for debugging
+    console.log("Missing request body error");
+    // Return a 400 Bad Request response
     return res.status(400).json({ error: "Request body is missing" });
   }
   // Extract email and password from the request body
   const { email, password } = req.body;
   // Basic validation for email and password
   if (!email || !password) {
+    // Console log for debugging
+    console.log("Missing email or password error");
+    // Return a 400 Bad Request response
     return res.status(400).json({ error: "Email and password are required" });
   }
   // Attempt to create a new user
@@ -43,10 +49,13 @@ router.post('/register', async (req, res) => {
   } catch (err) {
     // Handle unique constraint violation for email
     if (err.code === 'SQLITE_CONSTRAINT') {
+      // Console log for debugging
+      console.log("Email already exists error");
+      // Return a 409 Conflict response
       return res.status(409).json({ error: "Email already exists" });
     }
     // Log the error for debugging purposes
-    console.error("Error registering user:", err);
+    console.error("Error registering user");
     // Error response
     res.status(500).json({ error: "Failed to register user" });
   }
@@ -56,30 +65,42 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   // Validate request body
   if (!req.body) {
+    // Console log for debugging
+    console.log("Missing request body error");
+    // Return a 400 Bad Request response
     return res.status(400).json({ error: "Request body is missing" });
   }
   // Extract email and password from the request body
   const { email, password } = req.body;
   // Basic validation for email and password
   if (!email || !password) {
+    // Console log for debugging
+    console.log("Missing email or password error");
+    // Return a 400 Bad Request response
     return res.status(400).json({ error: "Email and password are required" });
   }
   try {
     // Retrieve user by email
     const thisUser = await getUserByEmail(email);
     if (!thisUser) {
+      // Console log for debugging
+      console.log("User not found error");
+      // Return a 401 Unauthorized response
       return res.status(401).json({ error: "Invalid email or password" });
     }
     // Compare provided password with stored password hash
     const passwordMatch = await bcrypt.compare(password, thisUser.password_hash);
     if (!passwordMatch) {
+      // Console log for debugging
+      console.log("Invalid email or password");
+      // Return a 401 Unauthorized response
       return res.status(401).json({ error: "Invalid email or password" });
     }
     // Generate JWT token
     const token = jwt.sign(
       { userId: thisUser.id, email: thisUser.email },
       JWTsecret,
-      { expiresIn: '1h' }
+      { expiresIn: "1h" }
     );
     // Successful login response
     res.json({ 
@@ -91,8 +112,9 @@ router.post('/login', async (req, res) => {
     // Log the error for debugging purposes
     console.error("Error logging in user:", err);
     // Error response
-    res.status(500).json({ error: "Failed to login user" });
+    res.status(500).json({ error: "Authentication failed" });
   }
 });
 
+// Export the router to be used in the main application
 module.exports = router;
