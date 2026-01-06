@@ -6,16 +6,13 @@ if (nodeEnv !== 'production') {
     require("dotenv").config();
 }
 
-// Import the logging utility
-const {logInfo } = require("../utils/logger");
-
 // Validate required environment variables
 const requiredVars = ['PORT', 'JWT_SECRET'];
 
 // Check for missing variables
 for (const key of requiredVars) {
     if (!process.env[key]) {
-        logInfo(`Missing required environment variable ${key}`);
+        console.log(`Missing required environment variable ${key}`);
         process.exit(1);
     }
 }
