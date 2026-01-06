@@ -2,13 +2,18 @@
 const express = require("express");
 const app = express();
 
-// Global middleware that converts JSON to JS object
+// Middleware to parse JSON request bodies
 app.use(express.json());
 
-// Logging middleware to log each request method and URL
-if (process.env.NODE_ENV !== "production") {
+// Import environment variables
+const { NODE_ENV } = require("./config/env");
+// Import the logging utility
+const { logError, logInfo } = require("./utils/logger");
+
+// Development logging middleware
+if (NODE_ENV !== "production") {
     app.use((req, res, next) => {
-        console.log(`${req.method} ${req.originalUrl}`);
+        logInfo(`${req.method} ${req.originalUrl}`);
         next();
     });
 }
@@ -31,7 +36,7 @@ app.use((req, res) => {
 
 // Global error handler
 app.use((err, req, res, next) => {
-    console.error("UNHANDLED ERROR:", err);
+    logError("UNHANDLED ERROR:", err);
     res.status(500).json({ error: "Internal Server Error" });
 });
 

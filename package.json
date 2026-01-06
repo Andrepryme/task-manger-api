@@ -11,6 +11,8 @@
     "supertest": "^7.1.4"
   },
   "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
     "test": "jest"
   },
   "jest": {
