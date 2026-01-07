@@ -7,7 +7,15 @@ if (nodeEnv !== 'production') {
 }
 
 // Validate required environment variables
-const requiredVars = ['PORT', 'JWT_SECRET'];
+const requiredVars = [
+    'PORT',
+    'JWT_SECRET',
+    'DB_HOST',
+    'DB_PORT',
+    'DB_NAME',
+    'DB_USER',
+    'DB_PASSWORD'
+];
 
 // Check for missing variables
 for (const key of requiredVars) {
@@ -21,5 +29,10 @@ for (const key of requiredVars) {
 module.exports = {
     PORT: process.env.PORT,
     JWT_SECRET: process.env.JWT_SECRET,
-    NODE_ENV: nodeEnv
+    NODE_ENV: nodeEnv,
+    DB_HOST: process.env.DB_HOST,
+    DB_PORT: process.env.DB_PORT,
+    DB_NAME: process.env.DB_NAME,
+    DB_USER: process.env.DB_USER,
+    DB_PASSWORD: process.env.DB_PASSWORD
 };

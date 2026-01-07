@@ -1,19 +1,34 @@
-// Import the sqlite3 module
-const sqlite3 = require('sqlite3').verbose();
-// Define the path to the SQLite database file
-const path = require('path');
-// Adjust the path as necessary
-const dbPath = path.resolve(__dirname, 'dbvault.db');
+// Import the PostGres module
+const { Pool } = require("pg");
 
-// Create and export the database connection instance
-const db = new sqlite3.Database(dbPath, (err) => {
-    // Handle any connection errors
-    if (err) {
-        console.error('Error opening database:', err.message);
-    } else {
-        console.log('Connected to database.');
-    }
+// Import database configuration from environment variables
+const {
+    DB_HOST,
+    DB_PORT,
+    DB_NAME,
+    DB_USER,
+    DB_PASSWORD 
+} = require("../config/env");
+
+// Create a new PostgreSQL connection pool
+const pool = new Pool({
+    host: DB_HOST,
+    port: DB_PORT,
+    database: DB_NAME,
+    user: DB_USER,
+    password: DB_PASSWORD
 });
 
-// Export the database connection for use in other modules
-module.exports = { db };
+
+pool.on("connect", () => {
+    console.log("Connected to the PostgreSQL database");
+});
+
+
+pool.on("error", (err) => {
+    console.error("Unexpected PostGresSQL error", err);
+    process.exit(-1);
+});
+
+// Export the pool for use in other modules
+module.exports = { pool };
