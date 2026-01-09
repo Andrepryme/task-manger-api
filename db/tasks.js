@@ -24,7 +24,7 @@ async function getAllTasks(user_id, limit, offset) {
         LIMIT $2 OFFSET $3
     `;
     const result = await pool.query(sql, [user_id, limit, offset]);
-    return result.rows[0] || null;
+    return result.rows || null;
 }
 
 async function updateTask(id, fields, user_id) {
@@ -74,7 +74,7 @@ async function updateTask(id, fields, user_id) {
 async function deleteTask(id, user_id) {
     const sql = "DELETE FROM tasks WHERE id = $1 AND user_id = $2";
     const result = await pool.query(sql, [id, user_id]);
-    return result.rows[0] || null; 
+    return result.rowCount; 
 }   
 
 // Export the database connection for use in other modules
