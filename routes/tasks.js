@@ -114,7 +114,7 @@ router.patch("/:id", async(req, res) => {
             return res.status(404).json({ error: "Task not found" });
         }
         // Send the updated task as JSON
-        res.status(200).json({ message: "Task updated successfully" });
+        res.status(200).json({ message: "Task updated successfully", updatedTask });
     } catch (err) {
         logError("Failed to update task", err);
         res.status(500).json({ error: "Failed to update task" });

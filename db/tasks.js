@@ -41,15 +41,21 @@ async function updateTask(id, fields, user_id) {
         values.push(fields.completed);
         paramIndex++;
     }
-    // If no fields to update, return early
-    if (updates.length === 0) {
+
+    // If there are fields to update, update the updated_at else return early
+    if (updates.length !== 0) {
+        const currentTimeStamp = new Date();
+        updates.push(`updated_at  = $${paramIndex}`);
+        values.push(currentTimeStamp);
+    } else {
         return null;
     }
+
     const sql = `
         UPDATE tasks
         SET ${updates.join(', ')}
-        WHERE id = $${paramIndex}
-        AND user_id = $${paramIndex + 1}
+        WHERE id = $${paramIndex + 1}
+        AND user_id = $${paramIndex + 2}
         RETURNING *;
     `;
     // Add the task ID and user ID to the parameters array
