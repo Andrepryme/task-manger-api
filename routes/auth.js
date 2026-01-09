@@ -1,15 +1,14 @@
-// Loads .env values into process.env
-require("dotenv").config();
-// Import express to create a router
+// Import express and create a new router instance
 const express = require("express");
-// Create a new router instance
 const router = express.Router();
 // Import bcrypt for password hashing
 const bcrypt = require("bcrypt");
 // Import jsonwebtoken for token generation
 const jwt = require("jsonwebtoken");
-// Secret key for JWT signing (in a real application, store this securely)
-const JWTsecret = process.env.JWT_SECRET;
+// Secret key for JWT signing
+const { JWT_SECRET } = require("../config/env");
+// Import logger
+const {logInfo, logError } = require("../utils/logger")
 
 // Import database function to create a user
 const {
@@ -26,37 +25,41 @@ router.get("/", async(req, res) => {
 router.post("/register", async (req, res) => {
   // Validate request body
   if (!req.body) {
-    // Console log for debugging
-    console.log("Missing request body error");
-    // Return a 400 Bad Request response
+    // Client & console log error message
+    logInfo("Missing request body error");
     return res.status(400).json({ error: "Request body is missing" });
   }
   // Extract email and password from the request body
   const { email, password } = req.body;
   // Basic validation for email and password
   if (!email || !password) {
-    // Console log for debugging
-    console.log("Missing email or password error");
-    // Return a 400 Bad Request response
+    // Client & console log error message
+    logInfo("Missing email or password error");
     return res.status(400).json({ error: "Email and password are required" });
   }
   // Attempt to create a new user
   try {
+    // Hash the password before storing it
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hashSync(password, saltRounds);
     // Call the createUser function from the database module
-    const newUser = await createUser(email, password);
+    const newUser = await createUser(email, hashedPassword);
     // Successful response
-    res.status(201).json({ message: "User registered successfully", user: newUser });
+    res.status(201).json({
+      message: "User registered successfully",
+      user: {
+        id: newUser.id, email: newUser.email
+      }
+    });
   } catch (err) {
     // Handle unique constraint violation for email
-    if (err.code === 'SQLITE_CONSTRAINT') {
-      // Console log for debugging
-      console.log("Email already exists error");
-      // Return a 409 Conflict response
+    if (err.code === '23505') {
+      // Client & console log error message
+      logInfo("Email already exists")
       return res.status(409).json({ error: "Email already exists" });
     }
-    // Log the error for debugging purposes
-    console.error("Error registering user");
-    // Error response
+    // Client & console log error message
+    logError("Error registering user", err);
     res.status(500).json({ error: "Failed to register user" });
   }
 });
@@ -65,41 +68,37 @@ router.post("/register", async (req, res) => {
 router.post('/login', async (req, res) => {
   // Validate request body
   if (!req.body) {
-    // Console log for debugging
-    console.log("Missing request body error");
-    // Return a 400 Bad Request response
+    // Client & console log error message
+    logInfo("Missing request body error");
     return res.status(400).json({ error: "Request body is missing" });
   }
   // Extract email and password from the request body
   const { email, password } = req.body;
   // Basic validation for email and password
   if (!email || !password) {
-    // Console log for debugging
-    console.log("Missing email or password error");
-    // Return a 400 Bad Request response
+    // Client & console log error message
+    logInfo("Missing email or password error");
     return res.status(400).json({ error: "Email and password are required" });
   }
   try {
     // Retrieve user by email
     const thisUser = await getUserByEmail(email);
     if (!thisUser) {
-      // Console log for debugging
-      console.log("User not found error");
-      // Return a 401 Unauthorized response
+      // Client & console log error message
+      logInfo("User not found error");
       return res.status(401).json({ error: "Invalid email or password" });
     }
     // Compare provided password with stored password hash
-    const passwordMatch = await bcrypt.compare(password, thisUser.password_hash);
+    const passwordMatch = await bcrypt.compare(password, thisUser.password);
     if (!passwordMatch) {
-      // Console log for debugging
-      console.log("Invalid email or password");
-      // Return a 401 Unauthorized response
+      // Client & console log error message
+      logInfo("Invalid email or password");
       return res.status(401).json({ error: "Invalid email or password" });
     }
     // Generate JWT token
     const token = jwt.sign(
       { userId: thisUser.id, email: thisUser.email },
-      JWTsecret,
+      JWT_SECRET,
       { expiresIn: "1h" }
     );
     // Successful login response
@@ -109,9 +108,8 @@ router.post('/login', async (req, res) => {
       token
     });
   } catch (err) {
-    // Log the error for debugging purposes
-    console.error("Error logging in user:", err);
-    // Error response
+    // Client & console log error message
+    logError("Error logging in user:", err);
     res.status(500).json({ error: "Authentication failed" });
   }
 });

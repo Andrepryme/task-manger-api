@@ -1,57 +1,17 @@
-const { db } = require('./database');
-// Import bcrypt for password hashing
-const bcrypt = require('bcrypt');
+const { pool } = require('./database');
 
 // Function to create a new user
-function createUser(email, password) {
-    // Return a promise to handle asynchronous database operation
-    return new Promise(async(resolve, reject) => {
-        try {
-            // Hash the password before storing it
-            const saltRounds = 10;
-            const passwordHash = await bcrypt.hashSync(password, saltRounds);
-            // Prepare SQL statement to insert new user
-            const sql = `
-            INSERT INTO users (email, password_hash)
-            VALUES (?, ?)
-            `;
-            db.run(
-                sql,
-                [email, passwordHash],
-                function (err) {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve({
-                            id: this.lastID,
-                            email
-                        });
-                    }
-                }
-            );
-        } catch (error) {
-            reject(error);
-        }
-    });
+async function createUser(email, password) {
+    const sql = "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, email";
+    const result = await pool.query(sql, [email, password]);
+    return result.rows[0];
 }
 
 // Function to get a user by email
-function getUserByEmail(email) {
-    return new Promise((resolve, reject) => {
-        const sql = `
-            SELECT * FROM users WHERE email = ?
-        `;
-        db.get(sql,
-            [email],
-            (err, row) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(row);
-                }
-            }
-        );
-    });
+async function getUserByEmail(email) {
+    const sql = "SELECT * FROM users WHERE email = $1 ";
+    const result = await pool.query(sql, [email]);
+    return result.rows[0] || null;
 }
 
 module.exports = {

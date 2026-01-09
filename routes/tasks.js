@@ -15,15 +15,13 @@ const {
     authMiddleware
  } = require("../middleware/auth");
 
+const { 
+    logError,
+    logInfo
+} = require("../utils/logger");
+
 // Apply authentication middleware to all routes in this router
 router.use(authMiddleware);
-
-// In-memory array to store tasks for PATCH and DELETE operations
-// const tasks = [
-//     { id: 1, title: "Learn JS", completed: false },
-//     { id: 2, title: "Build API", completed: false },
-//     { id: 3, title: "Deployment", completed: false }
-// ];  
 
 // Handles POST requests, and used to create data
 router.post("/", async(req, res) => {
@@ -39,9 +37,8 @@ router.post("/", async(req, res) => {
         // Send the created task as JSON
         res.status(201).json(newTask);
     } catch (err) {
-        // Console error for debugging
-        console.error("CREATE ERROR:", err);
-        // Return a 500 error response
+        // Client & console log error message
+        logError("CREATE ERROR:", err);
         res.status(500).json({ error: "Failed to create task" });
     }
 });
@@ -57,9 +54,8 @@ router.get("/", async(req, res) => {
         // Send the task as JSON
         res.json(allTasks);
     } catch (err) {
-        // Console error for debugging
-        console.error("GET ALL ERROR:", err);
-        // Return a 500 error response  
+        // Client & console log error message
+        logError("GET ALL ERROR:", err);
         res.status(500).json({ error: "Failed to retrieve tasks" });
     }
 });
@@ -83,7 +79,7 @@ router.get("/:id", async(req, res) => {
         res.status(200).json(thisTask);
     } catch (err) {
         // Console error for debugging
-        console.error("GET BY ID ERROR:", err);
+        logError("GET BY ID ERROR:", err);
         // Return a 500 error response
         res.status(500).json({ error: "Failed to retrieve task" });  
     }
@@ -120,6 +116,7 @@ router.patch("/:id", async(req, res) => {
         // Send the updated task as JSON
         res.status(200).json({ message: "Task updated successfully" });
     } catch (err) {
+        logError("Failed to update task", err);
         res.status(500).json({ error: "Failed to update task" });
     }
 });

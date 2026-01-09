@@ -1,11 +1,11 @@
 const jwt = require('jsonwebtoken');
 // Secret key for JWT signing (in a real application, store this securely)
-const JWT_secret = process.env.JWT_SECRET;
+const { JWT_SECRET } = require("../config/env");
 
 // Middleware function to authenticate requests using JWT tokens
 function authMiddleware (req, res, next) {
     //  Check if JWT secret is defined
-    if (!JWT_secret) {
+    if (!JWT_SECRET) {
         // JWT secret is missing
         console.log("JWT_SECRET is not defined in environment variables.");
         return res.status(500).json({ error: "Authentication failed." });
@@ -37,7 +37,7 @@ function authMiddleware (req, res, next) {
     // Retrieve user by email from the database
     try {
         // Verify the token
-        const decoded = jwt.verify(token, JWT_secret);
+        const decoded = jwt.verify(token, JWT_SECRET);
         // Check if the token is valid
         if (!decoded) {
             // Token is invalid

@@ -1,126 +1,68 @@
-const { db } = require('./database');
+const { pool } = require('./database');
 
 // Function to create a new task
-function createTask(title, user_id) {
-    return new Promise((resolve, reject) => {
-        const sql =  "INSERT INTO tasks (title, user_id) VALUES (?, ?)";
-        db.run(
-            sql,
-            [title, user_id],
-            function (err) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve({
-                        id: this.lastID,
-                        title: title
-                    });
-                }
-            }
-        );
-    });
+async function createTask(title, user_id) {
+    const sql = "INSERT INTO tasks (title, user_id) VALUES ($1, $2) RETURNING id, title";
+    const result = await pool.query(sql, [title, user_id]);
+    return result.rows[0];
 }
 
 // Function to get a task by ID
-function getTaskById(id, user_id) {
-    return new Promise((resolve, reject) => {
-        const sql = "SELECT * FROM tasks WHERE id = ? AND user_id = ?";
-        db.get(
-            sql,
-            [id, user_id],
-            (err, row) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(row);
-                }
-            }
-        );
-    });
+async function getTaskById(id, user_id) {
+    const sql = "SELECT * FROM tasks WHERE id = $1 AND user_id = $2";
+    const result = await pool.query(sql, [id, user_id]);
+    return result.rows[0] || null;
 }
 
 // Function to get all tasks
-function getAllTasks(user_id) {
-    return new Promise((resolve, reject) => {
-        const sql =  "SELECT * FROM tasks WHERE user_id = ?";
-        db.all(
-            sql,
-            [user_id],
-            (err, rows) => {
-                // Handle any errors
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(rows);
-                }
-            }
-        );
-    });
+async function getAllTasks(user_id) {
+    const sql = "SELECT * FROM tasks WHERE user_id = $1";
+    const result = await pool.query(sql, [user_id]);
+    return result.rows[0] || null;
 }
 
-function updateTask(id, fields, user_id) {
+async function updateTask(id, fields, user_id) {
     // Build the SQL query dynamically based on provided fields
     const updates = [];
     // Parameters array for the SQL query
     const values = [];
+    // paramIndex tracks placeholder
+    let paramIndex = 1;
+
     // Only update the title if it's provided
     if (fields.title !== undefined) {
-        updates.push("title = ?");
+        updates.push(`title = $${paramIndex}`);
         values.push(fields.title);
+        paramIndex++;
     }
     // Only update the completed status if it's provided
     if (fields.completed !== undefined) {
-        updates.push("completed = ?");
+        updates.push(`completed = $${paramIndex}`);
         values.push(fields.completed);
+        paramIndex++;
     }
     // If no fields to update, return early
     if (updates.length === 0) {
-        // No fields to update
-        return Promise.resolve(0);
+        return null;
     }
-    // Return a promise that resolves when the update is complete
-    return new Promise((resolve, reject) => {
-        const sql = `
-        UPDATE tasks 
-        SET ${updates.join(", ")} 
-        WHERE id = ? AND user_id = ?
-        `;
-        // Add the task ID to the parameters array
-        values.push(id);
-        // Add the user ID to the parameters array
-        values.push(user_id);
-        // Execute the update query
-        db.run(
-            sql,
-            values,
-            function (err) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(this.changes);
-                }
-            }
-        );
-    });
+    const sql = `
+        UPDATE tasks
+        SET ${updates.join(', ')}
+        WHERE id = $${paramIndex}
+        AND user_id = $${paramIndex + 1}
+        RETURNING *;
+    `;
+    // Add the task ID and user ID to the parameters array
+    values.push(id, user_id);
+    const result = await pool.query(sql, values);
+    return result.rows[0] || null;
 }   
 
 // Function to delete a task by ID
-function deleteTask(id, user_id) {
-    return new Promise((resolve, reject) => {
-        const sql = "DELETE FROM tasks WHERE id = ? AND user_id = ?";   
-        db.run(
-            sql,
-            [id, user_id],
-            function (err) {
-                if (err) {
-                    reject(err);
-                } else {
-                    // Return the number of rows affected
-                    resolve(this.changes);
-                }
-            }
-        );
-    });
+async function deleteTask(id, user_id) {
+    const sql = "DELETE FROM tasks WHERE id = $1 AND user_id = $2";
+    const result = await pool.query(sql, [id, user_id]);
+    return result.rows[0] || null; 
 }   
 
 // Export the database connection for use in other modules
