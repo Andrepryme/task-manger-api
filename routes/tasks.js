@@ -45,9 +45,13 @@ router.post("/", async(req, res) => {
 
 // Handle GET requests for /tasks and sends data as JSON
 router.get("/", async(req, res) => {
- // Retrieve the task from the database
+    // Prepares the limit parameter from the request query
+    const limit = Math.min(parseInt(req.query.limit) || 10, 50);
+    // Prepares the offset parameter from the request query
+    const offset = parseInt(req.query.offset) || 0;
+    // Retrieve the task from the database
     try {
-        const allTasks = await getAllTasks(req.user.userId);
+        const allTasks = await getAllTasks(req.user.userId, limit, offset);
         if (!allTasks) {
             return res.status(404).json({ error: "No tasks found" });
         }

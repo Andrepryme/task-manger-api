@@ -15,9 +15,15 @@ async function getTaskById(id, user_id) {
 }
 
 // Function to get all tasks
-async function getAllTasks(user_id) {
-    const sql = "SELECT * FROM tasks WHERE user_id = $1";
-    const result = await pool.query(sql, [user_id]);
+async function getAllTasks(user_id, limit, offset) {
+    const sql =`
+        SELECT *
+        FROM tasks
+        WHERE user_id = $1
+        ORDER by created_at DESC
+        LIMIT $2 OFFSET $3
+    `;
+    const result = await pool.query(sql, [user_id, limit, offset]);
     return result.rows[0] || null;
 }
 
