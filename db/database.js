@@ -3,7 +3,6 @@ const { Pool } = require("pg");
 
 // Import database configuration from environment variables
 const {
-    NODE_ENV,
     DB_HOST,
     DB_PORT,
     DB_NAME,
@@ -13,12 +12,14 @@ const {
 
 let pool;
 // Create a new PostgreSQL connection pool
-if  (NODE_ENV === "production") {
+if  (process.env.DATABASE_URL) {
+    // Render /  Production
     pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false, },
     });
 } else {
+    // Local development
     pool = new Pool({
         host: DB_HOST,
         port: DB_PORT,

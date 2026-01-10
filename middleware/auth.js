@@ -50,6 +50,12 @@ function authMiddleware (req, res, next) {
         next();
     } catch (err) {
         // Handle invalid token error
+        if (err.code === "TokenExpiredError") {
+            return res.status(401)
+            .json({
+                error: "Session expired, please login again."
+            });
+        }
         console.error("AUTH ERROR:", err);
         return res.status(401).json({ error: "Authentication failed." });
     }
