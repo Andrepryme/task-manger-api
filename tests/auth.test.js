@@ -5,7 +5,7 @@ const app = require("../app");
 // Test suite for the Auth routes
 describe("Auth Routes", () => {
     // Test the registration route
-    it("registers and logs in new user", async () => {
+    it("registers and then logs in the user", async () => {
         // Define test user credentials
         const email = `test_${Date.now()}@example.com`;
         const password = "TestPassword123";
