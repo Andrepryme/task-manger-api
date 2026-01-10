@@ -1,5 +1,5 @@
 // Determine the current environment
-const nodeEnv = process.env.NODE_ENV || 'development';
+const nodeEnv = 'development';
 
 // Load environment variables from .env file in non-production environments
 if (nodeEnv !== 'production') {
