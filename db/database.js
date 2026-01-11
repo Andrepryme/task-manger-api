@@ -13,7 +13,7 @@ const {
 let pool;
 // Create a new PostgreSQL connection pool
 if  (process.env.DATABASE_URL) {
-    // Render /  Production
+    // Render / Production
     pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false, },
