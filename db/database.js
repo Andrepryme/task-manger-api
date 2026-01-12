@@ -1,6 +1,8 @@
 // Import the PostGres module
 const { Pool } = require("pg");
 
+const { logInfo, logError } = require("../utils/logger");
+
 // Import database configuration from environment variables
 const {
     DB_HOST,
@@ -30,12 +32,12 @@ if  (process.env.DATABASE_URL) {
 }
 
 pool.on("connect", () => {
-    console.log("Connected to the PostgreSQL database");
+    logInfo("Connected to the PostgreSQL database");
 });
 
 
 pool.on("error", (err) => {
-    console.error("Unexpected PostGresSQL error", err);
+    logError("Unexpected PostGresSQL error", err);
     process.exit(-1);
 });
 

@@ -3,6 +3,7 @@
 A secure, RESTful Task Manager API built with Node.js, Express, and PostgreSQL.  
 It supports user authentication, task CRUD operations, pagination, and ownership-based access control.
 
+**Live API URL** https://task-manger-api-0uw7.onrender.com
 ---
 
 ## 🚀 Features
