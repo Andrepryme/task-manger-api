@@ -17,9 +17,7 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "migrate": "node db/run-migrations.js",
-    "test": "cross-env NODE_ENV=test jest --runInBand",
-    "test:watch": "cross-env NODE_ENV=test jest --watch",
-    "test:tasks": "cross-env NODE_ENV=test jest tests/tasks.test.js"
+    "test": "cross-env NODE_ENV=test jest --runInBand"
   },
   "jest": {
     "setupFilesAfterEnv": [

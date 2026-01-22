@@ -1,10 +1,10 @@
-const { pool } = require('../db/database');
+const { pool } = require("../db/database");
 
 beforeAll(async () => {
-  await pool.query('BEGIN');
+  await pool.query("BEGIN");
 });
 
 afterAll(async () => {
-  await pool.query('ROLLBACK');
+  await pool.query("ROLLBACK");
   await pool.end();
 });
